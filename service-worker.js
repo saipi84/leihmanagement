@@ -1,4 +1,3 @@
-// Service Worker za ZSVA Leih PWA
 const CACHE_NAME = 'zsva-leih-v1';
 
 self.addEventListener('install', event => {
