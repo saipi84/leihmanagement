@@ -1,10 +1,16 @@
-// Minimaler Service Worker – nur damit Chrome die PWA erkennt
+// Service Worker za ZSVA Leih PWA
+const CACHE_NAME = 'zsva-leih-v1';
+
 self.addEventListener('install', event => {
-  console.log('Service Worker installiert');
-  self.skipWaiting(); // sorgt für sofortige Aktivierung
+    console.log('[SW] Instaliran');
+    self.skipWaiting();
 });
 
 self.addEventListener('fetch', event => {
-  // Nichts spezielles cachen – einfach normal laden
-  event.respondWith(fetch(event.request));
+    event.respondWith(fetch(event.request));
+});
+
+self.addEventListener('activate', event => {
+    console.log('[SW] Aktiviran');
+    event.waitUntil(clients.claim());
 });
