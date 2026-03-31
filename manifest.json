@@ -1,0 +1,25 @@
+{
+  "name": "ZSVA Leihmanagement",
+  "short_name": "ZSVA Leih",
+  "description": "Leihmanagement für St. Gallen",
+  "start_url": "/sites/ARG-DIBSCM-scmleihsiebe/zsvapwa/Forms/AllItems.aspx",
+  "scope": "/sites/ARG-DIBSCM-scmleihsiebe/zsvapwa/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#1a2634",
+  "theme_color": "#c5a059",
+  "icons": [
+    {
+      "src": "/sites/ARG-DIBSCM-scmleihsiebe/zsvapwa/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/sites/ARG-DIBSCM-scmleihsiebe/zsvapwa/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
