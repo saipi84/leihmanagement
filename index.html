@@ -3,19 +3,73 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ZSVA Leih PWA</title>
+    <title>ZSVA Leihmanagement</title>
     <link rel="manifest" href="manifest.json">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="ZSVA Leih">
+    <meta name="theme-color" content="#1a2634">
     <link rel="apple-touch-icon" href="icon-192.png">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: radial-gradient(ellipse at 30% 40%, #2c3e50 0%, #0a0f15 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Segoe UI', sans-serif;
+        }
+        .card {
+            text-align: center;
+            padding: 40px;
+        }
+        .logo {
+            font-size: 72px;
+            font-weight: 900;
+            color: #c5a059;
+            letter-spacing: 3px;
+            text-shadow: 0 0 40px rgba(197,160,89,.4);
+        }
+        .sub {
+            color: rgba(197,160,89,.7);
+            font-size: 11px;
+            letter-spacing: 6px;
+            text-transform: uppercase;
+            margin: 8px 0 32px;
+        }
+        .spinner {
+            width: 40px; height: 40px;
+            border: 3px solid rgba(197,160,89,.2);
+            border-top-color: #c5a059;
+            border-radius: 50%;
+            animation: spin .8s linear infinite;
+            margin: 0 auto;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .msg {
+            color: rgba(197,160,89,.6);
+            font-size: 12px;
+            margin-top: 16px;
+            letter-spacing: 1px;
+        }
+    </style>
 </head>
 <body>
-    <h1 style="font-family: sans-serif; text-align: center; margin-top: 50px;">
-        ZSVA Leihmanagement PWA
-    </h1>
-    <p style="text-align: center;">
-        <a href="https://www.pulsnet.ch/sites/ARG-DIBSCM-scmleihsiebe/zsvapwa/leihmanagement_mobile_v5_PWA.aspx" 
-           style="display: inline-block; padding: 12px 24px; background: #c5a059; color: white; text-decoration: none; border-radius: 8px;">
-            App öffnen
-        </a>
-    </p>
+    <div class="card">
+        <div class="logo">ZSVA</div>
+        <div class="sub">Leihmanagement St. Gallen</div>
+        <div class="spinner"></div>
+        <div class="msg">Wird geladen...</div>
+    </div>
+    <script>
+        // Redirect na SharePoint nakon kratkog splasha
+        setTimeout(() => {
+            window.location.replace(
+                'https://www.pulsnet.ch/sites/ARG-DIBSCM-scmleihsiebe/zsvapwa/leihmanagement_mobile_v5_PWA.aspx'
+            );
+        }, 1500);
+    </script>
 </body>
 </html>
