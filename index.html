@@ -1,48 +1,1024 @@
 <!DOCTYPE html>
-<html>
+<html lang="de">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ZSVA Leihmanagement</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#c5a059">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="ZSVA Leih">
+    <meta name="theme-color" content="#1a2634">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <title>Leihmanagement St. Gallen</title>
+
     <style>
-        body {
-            margin: 0;
-            background: #1a2634;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            font-family: 'Segoe UI', sans-serif;
+        :root {
+            --blue-deep: #1a2634;
+            --blue-mid:  #2c3e50;
+            --gold:      #c5a059;
+            --green:     #27ae60;
+            --green-dark:#1e8449;
+            --red:       #e74c3c;
+            --orange:    #f39c12;
+            --sky:       #3498db;
+            --white:     #ffffff;
+            --off-white: #f0f3f6;
+            --text-dark: #1a2634;
+            --text-mid:  #4a5568;
+            --text-light:#718096;
+            --border:    rgba(0,0,0,0.08);
+            --shadow-sm: 0 2px 8px rgba(0,0,0,0.08);
+            --shadow-md: 0 4px 20px rgba(0,0,0,0.12);
+            --radius-sm: 8px;
+            --radius-md: 14px;
+            --radius-lg: 20px;
+            --radius-xl: 28px;
+            --nav-h:     64px;
         }
-        .msg {
-            color: #c5a059;
-            font-size: 18px;
-            font-weight: 700;
-            letter-spacing: 2px;
-            text-align: center;
+        body.dark {
+            --off-white: #111820;
+            --text-dark: #ecf0f1;
+            --text-mid:  #a0aec0;
+            --border:    rgba(255,255,255,0.08);
         }
-        .spinner {
-            width: 40px; height: 40px;
-            border: 3px solid rgba(197,160,89,0.2);
-            border-top-color: #c5a059;
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-            margin: 0 auto 20px;
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        html, body {
+            width: 100%; min-height: 100vh;
+            font-family: 'Segoe UI', -apple-system, sans-serif;
+            font-size: 15px;
+            background: var(--off-white);
+            color: var(--text-dark);
+            overscroll-behavior: none;
         }
+
+        /* TOAST */
+        .toast-wrap { position: fixed; top: 16px; left: 50%; transform: translateX(-50%); z-index: 99999; display: flex; flex-direction: column; gap: 8px; width: calc(100% - 32px); max-width: 420px; pointer-events: none; }
+        .toast { padding: 14px 18px; border-radius: var(--radius-md); color: #fff; font-size: 14px; font-weight: 600; pointer-events: auto; cursor: pointer; box-shadow: var(--shadow-md); animation: toastIn .28s cubic-bezier(.34,1.56,.64,1) forwards; }
+        .toast.success { background: linear-gradient(135deg, #27ae60, #2ecc71); }
+        .toast.error   { background: linear-gradient(135deg, #c0392b, #e74c3c); }
+        .toast.warning { background: linear-gradient(135deg, #e67e22, #f39c12); }
+        .toast.info    { background: linear-gradient(135deg, #2980b9, #3498db); }
+        .toast.out     { animation: toastOut .25s ease forwards; }
+        @keyframes toastIn  { from { opacity:0; transform:translateY(-16px) scale(.94); } to { opacity:1; transform:translateY(0) scale(1); } }
+        @keyframes toastOut { to { opacity:0; transform:translateY(-12px) scale(.94); } }
+
+        /* SPINNER */
+        .spinner-wrap { display: none; position: fixed; inset: 0; z-index: 98000; background: rgba(0,0,0,.35); backdrop-filter: blur(4px); align-items: center; justify-content: center; }
+        .spinner-wrap.show { display: flex; }
+        .spinner { width: 48px; height: 48px; border-radius: 50%; border: 4px solid rgba(255,255,255,.2); border-top-color: var(--gold); animation: spin .8s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* SPLASH */
+        #homePage {
+            position: fixed; inset: 0; z-index: 9000;
+            display: flex; align-items: center; justify-content: center;
+            background: radial-gradient(ellipse at 30% 40%, #2c3e50 0%, #0a0f15 100%);
+        }
+        .splash-card {
+            width: min(88vw, 380px); padding: 40px 32px 36px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(197,160,89,.25);
+            border-radius: var(--radius-xl);
+            backdrop-filter: blur(16px);
+            text-align: center; position: relative; overflow: hidden;
+        }
+        .splash-card::before {
+            content:''; position:absolute; inset:0;
+            background: conic-gradient(from 0deg, transparent 70%, rgba(197,160,89,.15) 100%);
+            animation: spinGlow 6s linear infinite; border-radius: inherit;
+        }
+        @keyframes spinGlow { to { transform: rotate(360deg); } }
+        .splash-logo { font-size: 64px; font-weight: 900; color: var(--gold); letter-spacing: 3px; position: relative; z-index: 1; text-shadow: 0 0 40px rgba(197,160,89,.4); }
+        .splash-sub { color: rgba(197,160,89,.7); font-size: 11px; letter-spacing: 6px; text-transform: uppercase; margin: 8px 0 32px; position: relative; z-index: 1; }
+        .splash-btns { display: flex; flex-direction: column; gap: 14px; position: relative; z-index: 1; }
+        .splash-btn { padding: 16px 24px; border: 1.5px solid var(--gold); background: transparent; color: var(--gold); border-radius: var(--radius-lg); font-size: 15px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; transition: all .22s ease; }
+        .splash-btn:active { background: var(--gold); color: var(--blue-deep); transform: scale(.97); }
+
+        /* PIN MODAL */
+        .modal-bg { display: none; position: fixed; inset: 0; z-index: 99000; background: rgba(0,0,0,.6); backdrop-filter: blur(6px); align-items: flex-end; justify-content: center; }
+        .modal-bg.open { display: flex; }
+        .modal-sheet { background: var(--white); width: 100%; max-width: 480px; border-radius: var(--radius-xl) var(--radius-xl) 0 0; padding: 24px 20px 40px; animation: slideUp .28s cubic-bezier(.34,1.2,.64,1); }
+        body.dark .modal-sheet { background: #1a2634; }
+        @keyframes slideUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .modal-handle { width: 36px; height: 4px; background: var(--border); border-radius: 2px; margin: 0 auto 20px; }
+        .modal-title { font-size: 18px; font-weight: 800; margin-bottom: 16px; }
+        .modal-input { width: 100%; padding: 14px 16px; border: 1.5px solid var(--border); border-radius: var(--radius-sm); font-size: 16px; background: var(--off-white); color: var(--text-dark); outline: none; margin-bottom: 14px; -webkit-appearance: none; }
+        body.dark .modal-input { background: #111820; }
+        .modal-input:focus { border-color: var(--gold); }
+        .modal-btns { display: flex; gap: 10px; }
+        .modal-btn { flex: 1; padding: 14px; border: none; border-radius: var(--radius-sm); font-size: 15px; font-weight: 700; cursor: pointer; }
+        .modal-btn.confirm { background: var(--blue-deep); color: white; }
+        .modal-btn.cancel  { background: var(--off-white); color: var(--text-dark); border: 1.5px solid var(--border); }
+
+        /* TOP BAR */
+        #topBar { display: none; position: fixed; top: 0; left: 0; right: 0; height: 56px; z-index: 7500; background: rgba(26,38,52,0.97); backdrop-filter: blur(16px); align-items: center; padding: 0 16px; gap: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.25); }
+        .topbar-title { flex: 1; color: var(--gold); font-size: 16px; font-weight: 700; letter-spacing: .5px; }
+        .topbar-btn { width: 38px; height: 38px; border-radius: 50%; border: none; background: rgba(255,255,255,0.1); color: white; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background .18s; }
+        .topbar-btn:active { background: rgba(255,255,255,0.2); }
+
+        /* FILTER BAR */
+        #filterBar { display: none; position: fixed; top: 56px; left: 0; right: 0; height: 46px; z-index: 7400; background: rgba(255,255,255,0.95); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); padding: 0 16px; align-items: center; justify-content: center; gap: 12px; }
+        body.dark #filterBar { background: rgba(16,24,34,0.97); }
+        .filter-active-label { font-size: 13px; font-weight: 700; color: var(--text-dark); white-space: nowrap; }
+        .filter-open-btn { display: flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 20px; border: 1.5px solid var(--gold); background: none; font-size: 12px; font-weight: 700; cursor: pointer; color: var(--gold); white-space: nowrap; }
+        .filter-open-btn:active { background: var(--gold); color: var(--blue-deep); }
+
+        /* FILTER POPUP */
+        #filterPopup { display: none; position: fixed; inset: 0; z-index: 88000; background: rgba(0,0,0,0.55); backdrop-filter: blur(4px); align-items: flex-end; justify-content: center; }
+        #filterPopup.open { display: flex; }
+        .filter-popup-sheet { background: var(--white); width: 100%; max-width: 480px; border-radius: 24px 24px 0 0; padding: 20px 20px 36px; animation: slideUp .25s cubic-bezier(.34,1.2,.64,1); }
+        body.dark .filter-popup-sheet { background: #1a2634; }
+        .filter-popup-handle { width: 36px; height: 4px; background: var(--border); border-radius: 2px; margin: 0 auto 18px; }
+        .filter-popup-title { font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; color: var(--text-light); margin-bottom: 14px; }
+        .filter-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 14px; }
+        .fgrid-btn { padding: 11px 4px; border-radius: 12px; border: 1.5px solid var(--border); background: var(--off-white); font-size: 13px; font-weight: 700; cursor: pointer; color: var(--text-mid); text-align: center; transition: all .15s; }
+        body.dark .fgrid-btn { background: rgba(255,255,255,.07); }
+        .fgrid-btn.active { background: var(--blue-deep); color: white; border-color: var(--blue-deep); }
+        .fgrid-btn.archive-btn { grid-column: span 2; border-color: var(--gold); color: var(--gold); background: rgba(197,160,89,.08); }
+        .fgrid-btn.archive-btn.active { background: var(--gold); color: var(--blue-deep); }
+        .filter-popup-close { width: 100%; padding: 14px; border: none; border-radius: var(--radius-md); background: var(--blue-deep); color: white; font-size: 15px; font-weight: 700; cursor: pointer; margin-top: 4px; }
+
+        /* MAIN SCROLL */
+        #mainScroll { display: none; padding-top: calc(56px + 46px + 12px); padding-bottom: calc(var(--nav-h) + 16px); padding-left: 12px; padding-right: 12px; min-height: 100vh; }
+
+        /* BOTTOM NAV */
+        #bottomNav { display: none; position: fixed; bottom: 0; left: 0; right: 0; height: var(--nav-h); z-index: 8000; background: rgba(255,255,255,0.96); backdrop-filter: blur(20px); border-top: 1px solid var(--border); box-shadow: 0 -4px 24px rgba(0,0,0,0.1); justify-content: space-around; align-items: center; padding: 0 8px; }
+        body.dark #bottomNav { background: rgba(20,30,42,0.97); }
+        .nav-item { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 8px 14px; border-radius: var(--radius-sm); border: none; background: none; cursor: pointer; transition: all .18s ease; min-width: 60px; color: var(--text-light); }
+        .nav-item.active { color: var(--gold); }
+        .nav-item .nav-icon { font-size: 22px; line-height: 1; }
+        .nav-item .nav-label { font-size: 10px; font-weight: 600; letter-spacing: .3px; text-transform: uppercase; }
+
+        /* FORM CARD */
+        .form-card { background: var(--white); border-radius: var(--radius-lg); box-shadow: var(--shadow-md); padding: 20px; margin-bottom: 16px; border: 1px solid var(--border); }
+        body.dark .form-card { background: #1e2d3e; }
+        .form-title { font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; color: var(--text-light); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+        .form-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+        .field-group { display: flex; flex-direction: column; gap: 12px; }
+        .field-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .field label { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .8px; color: var(--text-light); margin-bottom: 5px; }
+        .field input, .field select { width: 100%; padding: 13px 14px; border: 1.5px solid var(--border); border-radius: var(--radius-sm); font-size: 15px; background: var(--off-white); color: var(--text-dark); transition: border-color .18s; -webkit-appearance: none; appearance: none; outline: none; }
+        .field input:focus, .field select:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(197,160,89,.15); }
+        body.dark .field input, body.dark .field select { background: #111820; border-color: rgba(255,255,255,.12); }
+        .field input.err { border-color: var(--red); background: #fff5f5; }
+        .field-with-icon { position: relative; }
+        .field-with-icon input { padding-right: 44px; }
+        .field-icon-btn { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); width: 32px; height: 32px; border: none; background: none; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; border-radius: 6px; }
+        .btn-submit-mobile { width: 100%; padding: 16px; margin-top: 16px; background: linear-gradient(135deg, var(--green-dark), var(--green)); color: white; border: none; border-radius: var(--radius-md); font-size: 16px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; box-shadow: 0 4px 16px rgba(39,174,96,.35); transition: transform .15s; }
+        .btn-submit-mobile:active { transform: scale(.97); }
+        .btn-submit-mobile:disabled { opacity: .55; pointer-events: none; }
+
+        /* LEIH CARDS */
+        .section-label { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; color: var(--text-light); padding: 4px 4px 10px; display: flex; align-items: center; gap: 8px; }
+        .section-label .count-badge { background: var(--blue-deep); color: white; font-size: 10px; padding: 2px 7px; border-radius: 10px; }
+        body.dark .section-label .count-badge { background: var(--gold); color: var(--blue-deep); }
+        .leih-card { background: var(--white); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); margin-bottom: 10px; border: 1.5px solid var(--border); overflow: hidden; transition: box-shadow .2s; }
+        body.dark .leih-card { background: #1e2d3e; border-color: rgba(255,255,255,.08); }
+        .leih-card.done   { border-left: 4px solid var(--green); }
+        .leih-card.offen  { border-left: 4px solid var(--orange); }
+        .leih-card.late   { border-left: 4px solid var(--red); }
+        .leih-card.archiv { border-left: 4px solid #9b59b6; opacity: .9; }
+        .card-header { padding: 13px 16px 10px; display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; cursor: pointer; user-select: none; }
+        .card-main { flex: 1; min-width: 0; }
+        .card-sieb { font-size: 16px; font-weight: 800; color: var(--text-dark); line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .card-meta { margin-top: 5px; display: flex; flex-wrap: wrap; gap: 6px; }
+        .meta-pill { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: 12px; font-size: 11px; font-weight: 700; background: var(--off-white); color: var(--text-mid); border: 1px solid var(--border); }
+        body.dark .meta-pill { background: rgba(255,255,255,.07); }
+        .meta-pill.spital { background: rgba(52,152,219,.12); color: var(--sky); border-color: rgba(52,152,219,.2); }
+        .meta-pill.status-done    { background: rgba(39,174,96,.12); color: var(--green); border-color: rgba(39,174,96,.2); }
+        .meta-pill.status-offen   { background: rgba(243,156,18,.12); color: var(--orange); border-color: rgba(243,156,18,.2); }
+        .meta-pill.status-waiting { background: rgba(44,62,80,.1); color: var(--blue-mid); border-color: rgba(44,62,80,.2); }
+        .meta-pill.kritisch { background: rgba(231,76,60,.15); color: var(--red); border-color: rgba(231,76,60,.2); }
+        .card-chevron { font-size: 18px; color: var(--text-light); transition: transform .22s ease; flex-shrink: 0; margin-top: 2px; }
+        .leih-card.expanded .card-chevron, .blih-card.expanded .card-chevron { transform: rotate(90deg); }
+        .card-body { display: none; border-top: 1px solid var(--border); padding: 14px 16px 16px; }
+        .leih-card.expanded .card-body, .blih-card.expanded .card-body { display: block; }
+        .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+        .detail-item label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .7px; color: var(--text-light); display: block; margin-bottom: 3px; }
+        .detail-item .val { font-size: 14px; font-weight: 600; color: var(--text-dark); }
+        .detail-item .val.empty { color: var(--text-light); font-weight: 400; font-style: italic; }
+        .card-edit-field { width: 100%; padding: 10px 12px; border: 1.5px solid var(--border); border-radius: var(--radius-sm); font-size: 14px; background: var(--off-white); color: var(--text-dark); transition: border-color .18s; outline: none; -webkit-appearance: none; }
+        .card-edit-field:focus { border-color: var(--gold); }
+        body.dark .card-edit-field { background: #111820; border-color: rgba(255,255,255,.12); }
+        select.card-edit-field { padding-right: 32px; }
+        .card-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+        .card-btn { flex: 1; min-width: 90px; padding: 11px 8px; border: none; border-radius: var(--radius-sm); font-size: 13px; font-weight: 700; cursor: pointer; transition: transform .14s; display: flex; align-items: center; justify-content: center; gap: 6px; }
+        .card-btn:active { transform: scale(.95); opacity: .85; }
+        .card-btn.success { background: var(--green); color: white; }
+        .card-btn.danger  { background: var(--red); color: white; }
+        .card-btn.neutral { background: var(--off-white); color: var(--text-dark); border: 1.5px solid var(--border); }
+        body.dark .card-btn.neutral { background: rgba(255,255,255,.07); }
+        .admin-fields { background: rgba(26,38,52,.04); border-radius: var(--radius-sm); border: 1px dashed rgba(197,160,89,.4); padding: 12px; margin-bottom: 12px; }
+        body.dark .admin-fields { background: rgba(197,160,89,.04); }
+        .admin-fields-title { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--gold); margin-bottom: 10px; }
+        .admin-field-row { margin-bottom: 10px; }
+        .admin-field-row:last-child { margin-bottom: 0; }
+        .admin-field-row label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .7px; color: var(--text-light); display: block; margin-bottom: 4px; }
+        .btn-eingang-now { display: inline-flex; align-items: center; gap: 6px; padding: 10px 16px; border: none; background: linear-gradient(135deg, #1e8449, #27ae60); color: white; border-radius: var(--radius-sm); font-size: 13px; font-weight: 700; cursor: pointer; box-shadow: 0 3px 10px rgba(39,174,96,.3); }
+        .btn-eingang-now:active { opacity: .8; transform: scale(.97); }
+
+        /* BLIH CARDS */
+        .blih-card { background: var(--white); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); margin-bottom: 10px; border: 1.5px solid var(--border); border-left: 4px solid var(--sky); overflow: hidden; }
+        body.dark .blih-card { background: #1e2d3e; border-color: rgba(255,255,255,.08); }
+        .blih-card.kritisch-ja { border-left-color: var(--red); }
+
+        /* EMPTY STATE */
+        .empty-state { text-align: center; padding: 60px 20px; color: var(--text-light); }
+        .empty-state .empty-icon { font-size: 48px; margin-bottom: 12px; }
+        .empty-state p { font-size: 15px; font-weight: 500; }
+
+        #archivSection { display: none; }
+        #adminArchivSection { display: none; }
     </style>
 </head>
 <body>
-    <div class="msg">
-        <div class="spinner"></div>
-        ZSVA LEIHMANAGEMENT
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+
+<div id="toastWrap" class="toast-wrap"></div>
+<div id="spinner" class="spinner-wrap"><div class="spinner"></div></div>
+
+<!-- SPLASH -->
+<div id="homePage">
+    <div class="splash-card">
+        <div class="splash-logo">ZSVA</div>
+        <div class="splash-sub">Leihmanagement St. Gallen</div>
+        <div class="splash-btns">
+            <button class="splash-btn" onclick="showPinModal('K')">🏥 Kunden Login</button>
+            <button class="splash-btn" onclick="showPinModal('A')">🔧 ZSVA Login</button>
+        </div>
     </div>
-    <script>
-        window.location.replace(
-            "https://www.pulsnet.ch/sites/ARG-DIBSCM-scmleihsiebe/Leihsiebe/leihmanagement_mobile_v5_PWA.aspx"
-        );
-    </script>
+</div>
+
+<!-- PIN MODAL -->
+<div id="pinModal" class="modal-bg">
+    <div class="modal-sheet">
+        <div class="modal-handle"></div>
+        <div class="modal-title" id="pinModalTitle">PIN eingeben</div>
+        <input type="password" id="pinInput" class="modal-input" placeholder="PIN">
+        <div class="modal-btns">
+            <button class="modal-btn cancel" onclick="closePinModal()">Abbrechen</button>
+            <button class="modal-btn confirm" onclick="checkPin()">OK</button>
+        </div>
+    </div>
+</div>
+
+<!-- TOP BAR -->
+<div id="topBar">
+    <button class="topbar-btn" onclick="goHome()">🏠</button>
+    <div class="topbar-title" id="topBarTitle">ZSVA Leih</div>
+    <button class="topbar-btn" onclick="toggleTheme()">☀️</button>
+    <button class="topbar-btn" id="btnMail" onclick="sendMail()" style="display:none;">✉️</button>
+    <button class="topbar-btn" onclick="reloadData()">🔄</button>
+</div>
+
+<!-- FILTER BAR -->
+<div id="filterBar">
+    <span class="filter-active-label" id="filterActiveLabel">🏥 Alle Spitäler</span>
+    <button class="filter-open-btn" onclick="openFilterPopup()">⚙️ Filter</button>
+</div>
+
+<!-- FILTER POPUP -->
+<div id="filterPopup">
+    <div class="filter-popup-sheet">
+        <div class="filter-popup-handle"></div>
+        <div class="filter-popup-title">Spital filtern</div>
+        <div class="filter-grid">
+            <button class="fgrid-btn active" onclick="setFilter('Alle',this)">Alle</button>
+            <button class="fgrid-btn" onclick="setFilter('WIL',this)">WIL</button>
+            <button class="fgrid-btn" onclick="setFilter('GR',this)">GR</button>
+            <button class="fgrid-btn" onclick="setFilter('UZ',this)">UZ</button>
+            <button class="fgrid-btn" onclick="setFilter('SG20',this)">SG20</button>
+            <button class="fgrid-btn" onclick="setFilter('SG30',this)">SG30</button>
+            <button class="fgrid-btn" onclick="setFilter('SG40',this)">SG40</button>
+            <button class="fgrid-btn" onclick="setFilter('SG50',this)">SG50</button>
+            <button class="fgrid-btn" onclick="setFilter('SG60',this)">SG60</button>
+            <button class="fgrid-btn" onclick="setFilter('SG70',this)">SG70</button>
+            <button class="fgrid-btn" onclick="setFilter('SG80',this)">SG80</button>
+            <button class="fgrid-btn" onclick="setFilter('SG32',this)">SG32</button>
+            <button class="fgrid-btn archive-btn" id="archivPopupBtn" onclick="toggleArchiv()">📂 Archiv</button>
+        </div>
+        <button class="filter-popup-close" onclick="closeFilterPopup()">✓ Schliessen</button>
+    </div>
+</div>
+
+<!-- MAIN SCROLL -->
+<div id="mainScroll">
+
+    <!-- KUNDEN VIEW -->
+    <div id="viewK" style="display:none;">
+        <div class="form-card">
+            <div class="form-title">➕ Neue Anmeldung</div>
+            <div class="field-group">
+                <div class="field-row-2">
+                    <div class="field"><label>Liefer Datum *</label><input type="date" id="kLDat" class="card-edit-field" style="padding:12px;"></div>
+                    <div class="field"><label>OPS Datum *</label><input type="date" id="kODat" class="card-edit-field" style="padding:12px;"></div>
+                </div>
+                <div class="field-row-2">
+                    <div class="field">
+                        <label>Spital *</label>
+                        <select id="kSpit" class="card-edit-field" style="padding:12px;">
+                            <option value="">Wählen...</option>
+                            <option>WIL</option><option>GR</option><option>UZ</option>
+                            <option>SG20</option><option>SG30</option><option>SG40</option>
+                            <option>SG50</option><option>SG60</option><option>SG70</option><option>SG80</option>
+                        </select>
+                    </div>
+                    <div class="field"><label>MA OP *</label><input type="text" id="kMa" placeholder="Kürzel" class="card-edit-field" style="padding:12px;"></div>
+                </div>
+                <div class="field"><label>Lieferant *</label><input type="text" id="kLief" placeholder="Firma" class="card-edit-field" style="padding:12px;"></div>
+                <div class="field">
+                    <label>Sieb Bezeichnung *</label>
+                    <input type="text" id="kSieb" placeholder="Name" class="card-edit-field" style="padding:12px;">
+                </div>
+                <div class="field"><label>Bemerkung</label><input type="text" id="kNote" placeholder="Notiz (optional)" class="card-edit-field" style="padding:12px;"></div>
+            </div>
+            <button class="btn-submit-mobile" id="submitBtn" onclick="addLeih()">ANMELDUNG ABSENDEN</button>
+        </div>
+        <div id="leihList"></div>
+        <div id="archivSection">
+            <div class="section-label" style="margin-top:8px;">📂 Archiv <span class="count-badge" id="archivCount">0</span></div>
+            <div id="archivList"></div>
+        </div>
+    </div>
+
+    <!-- ZSVA ADMIN VIEW -->
+    <div id="viewA" style="display:none;">
+        <div id="adminList"></div>
+        <div id="adminArchivSection">
+            <div class="section-label" style="margin-top:8px;">📂 Archiv <span class="count-badge" id="adminArchivCount">0</span></div>
+            <div id="adminArchivList"></div>
+        </div>
+    </div>
+
+    <!-- BLIH VIEW -->
+    <div id="viewBLIH" style="display:none;">
+        <div class="form-card" id="blihForm" style="display:none;">
+            <div class="form-title">➕ BLIH Eintragen</div>
+            <div class="field-group">
+                <div class="field-row-2">
+                    <div class="field"><label>Aufgenommen am *</label><input type="date" id="bAufgenommen" class="card-edit-field" style="padding:12px;"></div>
+                    <div class="field">
+                        <label>Kritisch</label>
+                        <select id="bKritisch" class="card-edit-field" style="padding:12px;">
+                            <option value="nein">NEIN</option>
+                            <option value="ja">JA</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="field">
+                    <label>Spital *</label>
+                    <select id="bSpital" class="card-edit-field" style="padding:12px;">
+                        <option value="">Wählen...</option>
+                        <option>WIL</option><option>GR</option><option>UZ</option>
+                        <option>SG10</option><option>SG12</option><option>SG20</option>
+                        <option>SG30</option><option>SG32</option><option>SG40</option>
+                        <option>SG45</option><option>SG50</option><option>SG60</option>
+                        <option>SG70</option><option>SG80</option>
+                        <option>SGS06Endo</option><option>SGS03ST</option>
+                    </select>
+                </div>
+                <div class="field"><label>Lieferant *</label><input type="text" id="bLieferant" placeholder="Firma" class="card-edit-field" style="padding:12px;"></div>
+                <div class="field"><label>Sieb Bezeichnung *</label><input type="text" id="bSieb" placeholder="Name" class="card-edit-field" style="padding:12px;"></div>
+                <div class="field-row-2">
+                    <div class="field"><label>STE</label><input type="text" id="bSTF" placeholder="z.B. 1/4" class="card-edit-field" style="padding:12px;"></div>
+                    <div class="field"><label>Abgemeldet am</label><input type="date" id="bAbgemeldetAm" class="card-edit-field" style="padding:12px;"></div>
+                </div>
+                <div class="field-row-2">
+                    <div class="field"><label>Abgemeldet von</label><input type="text" id="bAbgemeldetVon" placeholder="Kürzel" class="card-edit-field" style="padding:12px;"></div>
+                    <div class="field"><label>ZSVA Ausgang</label><input type="text" id="bZSVAAusgang" placeholder="B.L.I.H." class="card-edit-field" style="padding:12px;"></div>
+                </div>
+                <div class="field"><label>Bemerkung</label><input type="text" id="bBemerkung" placeholder="Notiz" class="card-edit-field" style="padding:12px;"></div>
+            </div>
+            <button class="btn-submit-mobile" onclick="addBLIH()">BLIH EINTRAGEN</button>
+        </div>
+        <div id="blihList"></div>
+    </div>
+</div>
+
+<!-- BOTTOM NAV -->
+<div id="bottomNav">
+    <button class="nav-item" id="navK" onclick="showKundenView()" style="display:none;">
+        <span class="nav-icon">🏥</span><span class="nav-label">Kunden</span>
+    </button>
+    <button class="nav-item" id="navA" onclick="showAdminView()" style="display:none;">
+        <span class="nav-icon">🔧</span><span class="nav-label">ZSVA</span>
+    </button>
+    <button class="nav-item" id="navB" onclick="showBLIHView()">
+        <span class="nav-icon">📋</span><span class="nav-label">BLIH</span>
+    </button>
+</div>
+
+<script>
+// ================================================================
+// FIREBASE CONFIG
+// ================================================================
+const firebaseConfig = {
+    apiKey: "AIzaSyBK5gEzx_hYC0ReXKYti7YMzzpcZjt3NwI",
+    authDomain: "zsva-leihmanagement.firebaseapp.com",
+    databaseURL: "https://zsva-leihmanagement-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "zsva-leihmanagement",
+    storageBucket: "zsva-leihmanagement.firebasestorage.app",
+    messagingSenderId: "616213699941",
+    appId: "1:616213699941:web:87b2042d61093617b9958c"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+// ================================================================
+// STATE
+// ================================================================
+const PINS = { K: 'hoch', ZSVA: 'zsva', SL: 'schichtleiter' };
+let currentMode = null;
+let isSchichtleiter = false;
+let currentFilter = 'Alle';
+let showArchiv = false;
+let data = [];
+let dataBLIH = [];
+let pendingLoginType = null;
+let autoRefreshTimer = null;
+let isSubmitting = false;
+
+const emailConfig = {
+    recipients: {
+        'GR':   'Armita.Guebner-Giger@h-och.ch',
+        'UZ':   'Lan.Albrecht@spital-linth.ch',
+        'WIL':  'opwil@sfrt.ch',
+        'SG20': 'Oliver.Troll@h-och.ch',
+        'SG30': 'Salome.Zellweger@h-och.ch',
+        'SG40': 'Salome.Zellweger@kssg.ch',
+        'SG50': 'Nikol.Soltysh@h-och.ch',
+        'SG60': 'Alessandra.Papst@kssg.ch',
+        'SG70': 'Manuela.Meleit@h-och.ch',
+        'SG80': 'Cornelia.Jacoby@kssg.ch',
+        'SG32': 'Franziska.Baehler-Loser@h-och.ch'
+    }
+};
+
+// ================================================================
+// UI HELPERS
+// ================================================================
+function showSpinner()  { document.getElementById('spinner').classList.add('show'); }
+function hideSpinner()  { document.getElementById('spinner').classList.remove('show'); }
+
+function showToast(msg, type='info', dur=4000) {
+    const w = document.getElementById('toastWrap');
+    const t = document.createElement('div');
+    t.className = `toast ${type}`;
+    t.textContent = msg;
+    t.onclick = () => dismiss(t);
+    w.appendChild(t);
+    const id = setTimeout(() => dismiss(t), dur);
+    function dismiss(el) { clearTimeout(id); el.classList.add('out'); setTimeout(() => el.remove(), 280); }
+}
+
+function toggleTheme() {
+    document.body.classList.toggle('dark');
+    document.querySelector('#topBar .topbar-btn:nth-child(3)').textContent =
+        document.body.classList.contains('dark') ? '🌙' : '☀️';
+}
+
+function fmtD(s) {
+    if (!s) return '--';
+    const d = new Date(s); if (isNaN(d)) return '--';
+    return `${String(d.getDate()).padStart(2,'0')}.${String(d.getMonth()+1).padStart(2,'0')}.${d.getFullYear()}`;
+}
+
+function esc(s) {
+    return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function isPastDate(s) {
+    if (!s) return true;
+    const [y,m,d] = s.split('-').map(Number);
+    const today = new Date(); today.setHours(0,0,0,0);
+    return new Date(y,m-1,d) < today;
+}
+
+// ================================================================
+// PIN LOGIN
+// ================================================================
+function showPinModal(type) {
+    pendingLoginType = type;
+    document.getElementById('pinModalTitle').textContent = type==='K' ? '🏥 Kunden PIN' : '🔧 ZSVA PIN';
+    document.getElementById('pinInput').value = '';
+    document.getElementById('pinModal').classList.add('open');
+    setTimeout(() => document.getElementById('pinInput').focus(), 100);
+}
+
+function closePinModal() {
+    document.getElementById('pinModal').classList.remove('open');
+    pendingLoginType = null;
+}
+
+function checkPin() {
+    const pin = document.getElementById('pinInput').value.trim().toLowerCase();
+    const type = pendingLoginType;
+    closePinModal();
+
+    if (type === 'K') {
+        if (pin === PINS.K || pin === PINS.ZSVA || pin === PINS.SL) {
+            currentMode = 'kunden';
+            isSchichtleiter = false;
+            enterApp('kunden');
+            showToast('✅ Willkommen im Kunden-Portal!', 'success');
+            loadData();
+        } else {
+            showToast('❌ Falscher PIN!', 'error');
+        }
+    } else {
+        if (pin === PINS.SL) {
+            currentMode = 'admin';
+            isSchichtleiter = true;
+            enterApp('admin');
+            showToast('✅ Schichtleiter angemeldet!', 'success');
+            loadData();
+        } else if (pin === PINS.ZSVA) {
+            currentMode = 'admin';
+            isSchichtleiter = false;
+            enterApp('admin');
+            showToast('✅ ZSVA angemeldet!', 'success');
+            loadData();
+        } else {
+            showToast('❌ Falscher PIN!', 'error');
+        }
+    }
+}
+
+document.getElementById('pinInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') checkPin();
+    if (e.key === 'Escape') closePinModal();
+});
+
+// ================================================================
+// APP NAVIGATION
+// ================================================================
+function enterApp(mode) {
+    document.getElementById('homePage').style.display = 'none';
+    document.getElementById('topBar').style.display = 'flex';
+    document.getElementById('filterBar').style.display = 'flex';
+    document.getElementById('mainScroll').style.display = 'block';
+    document.getElementById('bottomNav').style.display = 'flex';
+    document.getElementById('navK').style.display = mode==='kunden' ? 'flex' : 'none';
+    document.getElementById('navA').style.display = mode==='admin'  ? 'flex' : 'none';
+    document.getElementById('navB').style.display = 'flex';
+    document.getElementById('btnMail').style.display = mode==='admin' && isSchichtleiter ? 'flex' : 'none';
+    document.getElementById('topBarTitle').textContent = mode==='kunden' ? '🏥 Kunden' : '🔧 ZSVA Admin';
+    if (mode === 'kunden') showKundenView(false);
+    else showAdminView(false);
+    if (autoRefreshTimer) clearInterval(autoRefreshTimer);
+    autoRefreshTimer = setInterval(loadData, 30000);
+}
+
+function goHome() {
+    currentMode = null; isSchichtleiter = false; showArchiv = false;
+    if (autoRefreshTimer) { clearInterval(autoRefreshTimer); autoRefreshTimer = null; }
+    document.getElementById('homePage').style.display = 'flex';
+    document.getElementById('topBar').style.display = 'none';
+    document.getElementById('filterBar').style.display = 'none';
+    document.getElementById('mainScroll').style.display = 'none';
+    document.getElementById('bottomNav').style.display = 'none';
+}
+
+function showKundenView(doRender=true) {
+    setActiveNav('navK');
+    document.getElementById('viewK').style.display = 'block';
+    document.getElementById('viewA').style.display = 'none';
+    document.getElementById('viewBLIH').style.display = 'none';
+    document.getElementById('filterBar').style.display = 'flex';
+    if (doRender) render();
+}
+
+function showAdminView(doRender=true) {
+    setActiveNav('navA');
+    document.getElementById('viewK').style.display = 'none';
+    document.getElementById('viewA').style.display = 'block';
+    document.getElementById('viewBLIH').style.display = 'none';
+    document.getElementById('filterBar').style.display = 'flex';
+    if (doRender) render();
+}
+
+function showBLIHView() {
+    setActiveNav('navB');
+    document.getElementById('viewK').style.display = 'none';
+    document.getElementById('viewA').style.display = 'none';
+    document.getElementById('viewBLIH').style.display = 'block';
+    document.getElementById('filterBar').style.display = 'none';
+    renderBLIH();
+}
+
+function setActiveNav(id) {
+    ['navK','navA','navB'].forEach(n => {
+        const el = document.getElementById(n);
+        if (el) el.classList.toggle('active', n===id);
+    });
+}
+
+// ================================================================
+// FIREBASE: LOAD DATA
+// ================================================================
+function loadData() {
+    showSpinner();
+    db.ref('leihsiebe').once('value').then(snap => {
+        data = [];
+        snap.forEach(child => {
+            data.push({ fbKey: child.key, ...child.val() });
+        });
+        data.sort((a,b) => new Date(a.ld) - new Date(b.ld));
+        render();
+    }).catch(e => {
+        showToast('Fehler beim Laden!', 'error');
+    }).finally(() => hideSpinner());
+
+    db.ref('blih').once('value').then(snap => {
+        dataBLIH = [];
+        snap.forEach(child => {
+            dataBLIH.push({ fbKey: child.key, ...child.val() });
+        });
+        if (document.getElementById('viewBLIH').style.display !== 'none') renderBLIH();
+    });
+}
+
+function reloadData() {
+    showToast('Aktualisieren...', 'info', 2000);
+    loadData();
+}
+
+// ================================================================
+// FIREBASE: ADD LEIH
+// ================================================================
+async function addLeih() {
+    if (isSubmitting) return;
+    const ld   = document.getElementById('kLDat').value;
+    const od   = document.getElementById('kODat').value;
+    const spit = document.getElementById('kSpit').value;
+    const lief = document.getElementById('kLief').value.trim();
+    const sb   = document.getElementById('kSieb').value.trim();
+    const ma   = document.getElementById('kMa').value.trim();
+    const note = document.getElementById('kNote').value.trim();
+
+    let errors = [];
+    if (!ld)   errors.push('Liefer Datum');
+    if (!od)   errors.push('OPS Datum');
+    if (!spit) errors.push('Spital');
+    if (!lief) errors.push('Lieferant');
+    if (!sb)   errors.push('Sieb Bezeichnung');
+    if (!ma)   errors.push('MA OP');
+    if (errors.length) { showToast('⚠️ Pflichtfelder: ' + errors.join(', '), 'error'); return; }
+    if (isPastDate(ld)) { showToast('⚠️ Liefer-Datum in der Vergangenheit!', 'error'); return; }
+    if (isPastDate(od)) { showToast('⚠️ OPS-Datum in der Vergangenheit!', 'error'); return; }
+    if (new Date(ld) > new Date(od)) { showToast('⚠️ Liefer-Datum nach OPS-Datum!', 'error'); return; }
+    const dup = data.find(i => i.od===od && i.ld===ld && i.sb.toLowerCase()===sb.toLowerCase());
+    if (dup) { showToast(`⚠️ Duplikat! "${sb}" bereits gemeldet.`, 'error'); return; }
+
+    isSubmitting = true;
+    document.getElementById('submitBtn').disabled = true;
+    showSpinner();
+    try {
+        const newItem = { ld, od, sp: spit, lf: lief, sb, ma, note, eingang:'', visum:'', offenVisum:'', offen:'nein', krit:'nein', min:0, versand:'', anzahl:'', createdAt: Date.now() };
+        const ref = await db.ref('leihsiebe').push(newItem);
+        data.push({ fbKey: ref.key, ...newItem });
+        data.sort((a,b) => new Date(a.ld) - new Date(b.ld));
+        ['kLDat','kODat','kSpit','kLief','kSieb','kMa','kNote'].forEach(id => { document.getElementById(id).value=''; });
+        showToast(`✅ "${sb}" registriert!`, 'success');
+        render();
+    } catch(e) { showToast('❌ Fehler beim Speichern.', 'error'); }
+    finally { isSubmitting = false; document.getElementById('submitBtn').disabled = false; hideSpinner(); }
+}
+
+// ================================================================
+// FIREBASE: SAVE FIELD
+// ================================================================
+function saveField(fbKey, field, value) {
+    const update = {};
+    update[field] = value;
+    db.ref('leihsiebe/' + fbKey).update(update);
+    const item = data.find(x => x.fbKey === fbKey);
+    if (item) item[field] = value;
+}
+
+function saveBLIHField(fbKey, field, value) {
+    const update = {};
+    update[field] = value;
+    db.ref('blih/' + fbKey).update(update);
+    const item = dataBLIH.find(x => x.fbKey === fbKey);
+    if (item) item[field] = value;
+}
+
+// ================================================================
+// FIREBASE: DELETE
+// ================================================================
+async function delLeih(fbKey) {
+    if (!isSchichtleiter) { showToast('❌ Nur Schichtleiter!', 'error'); return; }
+    if (!confirm('Eintrag wirklich löschen?')) return;
+    showSpinner();
+    try {
+        await db.ref('leihsiebe/' + fbKey).remove();
+        data = data.filter(x => x.fbKey !== fbKey);
+        showToast('✅ Gelöscht!', 'success');
+        render();
+    } catch(e) { showToast('Fehler beim Löschen.', 'error'); }
+    finally { hideSpinner(); }
+}
+
+async function delBLIH(fbKey) {
+    if (!isSchichtleiter) { showToast('❌ Nur Schichtleiter!', 'error'); return; }
+    if (!confirm('BLIH-Eintrag löschen?')) return;
+    showSpinner();
+    try {
+        await db.ref('blih/' + fbKey).remove();
+        dataBLIH = dataBLIH.filter(x => x.fbKey !== fbKey);
+        showToast('✅ Gelöscht!', 'success');
+        renderBLIH();
+    } catch(e) { showToast('Fehler beim Löschen.', 'error'); }
+    finally { hideSpinner(); }
+}
+
+// ================================================================
+// FIREBASE: ADD BLIH
+// ================================================================
+async function addBLIH() {
+    if (!isSchichtleiter) { showToast('❌ Nur Schichtleiter!', 'error'); return; }
+    const aufgenommen  = document.getElementById('bAufgenommen').value;
+    const spital       = document.getElementById('bSpital').value;
+    const lieferant    = document.getElementById('bLieferant').value.trim();
+    const sieb         = document.getElementById('bSieb').value.trim();
+    let errors = [];
+    if (!aufgenommen) errors.push('Aufgenommen am');
+    if (!spital)      errors.push('Spital');
+    if (!lieferant)   errors.push('Lieferant');
+    if (!sieb)        errors.push('Sieb');
+    if (errors.length) { showToast('⚠️ Pflichtfelder: '+errors.join(', '), 'error'); return; }
+    showSpinner();
+    try {
+        const kritisch     = document.getElementById('bKritisch').value;
+        const ste          = document.getElementById('bSTF').value.trim();
+        const abgemeldetAm = document.getElementById('bAbgemeldetAm').value;
+        const abgemeldetVon= document.getElementById('bAbgemeldetVon').value.trim();
+        const zsvaAusgang  = document.getElementById('bZSVAAusgang').value.trim();
+        const bemerkung    = document.getElementById('bBemerkung').value.trim();
+        const newItem = { aufgenommen, spital, lieferant, sieb: sieb, kritisch, ste, abgemeldetAm, abgemeldetVon, zsvaAusgang, bemerkung, createdAt: Date.now() };
+        const ref = await db.ref('blih').push(newItem);
+        dataBLIH.push({ fbKey: ref.key, ...newItem });
+        ['bAufgenommen','bSpital','bLieferant','bSieb','bKritisch','bSTF','bAbgemeldetAm','bAbgemeldetVon','bZSVAAusgang','bBemerkung'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el.tagName==='SELECT') el.selectedIndex=0; else el.value='';
+        });
+        showToast('✅ BLIH gespeichert!', 'success');
+        renderBLIH();
+    } catch(e) { showToast('❌ Fehler.', 'error'); }
+    finally { hideSpinner(); }
+}
+
+// ================================================================
+// EINGANG NOW
+// ================================================================
+function setEingangNow(fbKey) {
+    if (!isSchichtleiter) { showToast('❌ Nur Schichtleiter!', 'error'); return; }
+    const now = new Date();
+    const val = `${String(now.getDate()).padStart(2,'0')}.${String(now.getMonth()+1).padStart(2,'0')}. ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+    saveField(fbKey, 'eingang', val);
+    render();
+}
+
+// ================================================================
+// RENDER: LEIH
+// ================================================================
+function getCardStatus(d) {
+    if (d.visum)   return { label:'Fertig', cls:'status-done', cardCls:'done' };
+    if (d.eingang) return { label:'In Bearbeitung', cls:'status-offen', cardCls:'offen' };
+    return { label:'Angemeldet', cls:'status-waiting', cardCls:'' };
+}
+
+function toggleCard(cardId) {
+    const card = document.getElementById(cardId);
+    if (card) card.classList.toggle('expanded');
+}
+
+function renderLeihCard(d, isArchiv) {
+    const status = isArchiv ? { label:'Archiv', cls:'status-waiting', cardCls:'archiv' } : getCardStatus(d);
+    const cardId = `card_${d.fbKey}`;
+    const canEdit = !!d.eingang;
+
+    let detailHtml = `
+        <div class="detail-grid">
+            <div class="detail-item"><label>Liefer-Datum</label><div class="val">${fmtD(d.ld)}</div></div>
+            <div class="detail-item"><label>OPS-Datum</label><div class="val">${fmtD(d.od)}</div></div>
+            <div class="detail-item"><label>Lieferant</label><div class="val">${esc(d.lf)||'—'}</div></div>
+            <div class="detail-item"><label>MA OP</label><div class="val">${esc(d.ma)||'—'}</div></div>
+            <div class="detail-item"><label>Eingang</label><div class="val ${d.eingang?'':'empty'}">${esc(d.eingang)||'—'}</div></div>
+            <div class="detail-item"><label>Visum</label><div class="val ${d.visum?'':'empty'}">${esc(d.visum)||'—'}</div></div>
+            ${d.note ? `<div class="detail-item" style="grid-column:1/-1"><label>Notiz</label><div class="val">${esc(d.note)}</div></div>` : ''}
+        </div>`;
+
+    let adminHtml = '';
+    if (currentMode === 'admin') {
+        adminHtml = `<div class="admin-fields"><div class="admin-fields-title">⚙️ ZSVA Felder</div>`;
+        if (isSchichtleiter && !d.eingang) {
+            adminHtml += `<div class="admin-field-row"><label>Eingang</label><button class="btn-eingang-now" onclick="setEingangNow('${d.fbKey}')">📅 Jetzt setzen</button></div>`;
+        }
+        if (isSchichtleiter && d.eingang) {
+            adminHtml += `<div class="admin-field-row"><label>Eingang</label><input class="card-edit-field" value="${esc(d.eingang)}" onblur="saveField('${d.fbKey}','eingang',this.value);render()"></div>`;
+        }
+        if (isSchichtleiter) {
+            adminHtml += `<div class="admin-field-row"><label>Anzahl</label><input class="card-edit-field" value="${esc(d.anzahl)}" inputmode="decimal" onblur="saveField('${d.fbKey}','anzahl',this.value)"></div>`;
+        }
+        adminHtml += `
+            <div class="admin-field-row"><label>Prog / Visum</label><input class="card-edit-field" ${!canEdit?'disabled':''} value="${esc(d.visum)}" placeholder="${canEdit?'Visum':'Erst Eingang'}" onblur="saveField('${d.fbKey}','visum',this.value);render()"></div>
+            <div class="admin-field-row"><label>Minuten</label><input class="card-edit-field" type="number" ${!canEdit?'disabled':''} value="${d.min||0}" onblur="saveField('${d.fbKey}','min',this.value)" inputmode="numeric"></div>
+            <div class="admin-field-row"><label>Offen</label>
+                <select class="card-edit-field" ${!canEdit?'disabled':''} onchange="saveField('${d.fbKey}','offen',this.value)">
+                    <option value="nein" ${d.offen==='nein'?'selected':''}>Nein</option>
+                    <option value="ja" ${d.offen==='ja'?'selected':''}>Ja</option>
+                </select>
+            </div>
+            <div class="admin-field-row"><label>Offen / Visum</label><input class="card-edit-field" ${!canEdit?'disabled':''} value="${esc(d.offenVisum)}" placeholder="${canEdit?'Visum':'Erst Eingang'}" onblur="saveField('${d.fbKey}','offenVisum',this.value)"></div>`;
+        if (isSchichtleiter) {
+            adminHtml += `
+            <div class="admin-field-row"><label>Kritisch</label>
+                <select class="card-edit-field" onchange="saveField('${d.fbKey}','krit',this.value);render()">
+                    <option value="nein" ${d.krit==='nein'?'selected':''}>Nein</option>
+                    <option value="ja" ${d.krit==='ja'?'selected':''}>JA ⚠️</option>
+                </select>
+            </div>
+            <div class="admin-field-row"><label>Notiz</label><input class="card-edit-field" value="${esc(d.note)}" onblur="saveField('${d.fbKey}','note',this.value)"></div>
+            <div class="admin-field-row"><label>Versand</label><input class="card-edit-field" value="${esc(d.versand)}" onblur="saveField('${d.fbKey}','versand',this.value)"></div>`;
+        }
+        adminHtml += '</div>';
+    } else {
+        adminHtml = `<div class="admin-field-row" style="margin-bottom:12px;">
+            <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--text-light);display:block;margin-bottom:4px;">Notiz</label>
+            <input class="card-edit-field" value="${esc(d.note)}" placeholder="Notiz" onblur="saveField('${d.fbKey}','note',this.value)">
+        </div>`;
+    }
+
+    let actionsHtml = `<div class="card-actions">`;
+    if (isSchichtleiter) {
+        actionsHtml += `<button class="card-btn danger" onclick="delLeih('${d.fbKey}')">🗑️ Löschen</button>`;
+    }
+    actionsHtml += '</div>';
+
+    return `<div class="leih-card ${status.cardCls}" id="${cardId}">
+        <div class="card-header" onclick="toggleCard('${cardId}')">
+            <div class="card-main">
+                <div class="card-sieb">${esc(d.sb)}</div>
+                <div class="card-meta">
+                    <span class="meta-pill spital">${esc(d.sp)}</span>
+                    <span class="meta-pill ${status.cls}">${status.label}</span>
+                    ${d.krit==='ja' ? '<span class="meta-pill kritisch">⚠️ Kritisch</span>' : ''}
+                    <span class="meta-pill">📅 ${fmtD(d.od)}</span>
+                </div>
+            </div>
+            <span class="card-chevron">›</span>
+        </div>
+        <div class="card-body">${detailHtml}${adminHtml}${actionsHtml}</div>
+    </div>`;
+}
+
+function render() {
+    const now = new Date();
+    const tenDaysAgo = new Date(); tenDaysAgo.setDate(now.getDate()-10);
+    const filtered = data.filter(d => currentFilter==='Alle' || d.sp===currentFilter);
+    const active   = filtered.filter(d => new Date(d.od) >= tenDaysAgo);
+    const archiv   = filtered.filter(d => new Date(d.od) < tenDaysAgo);
+
+    if (currentMode === 'kunden') {
+        const el = document.getElementById('leihList');
+        if (!el) return;
+        el.innerHTML = active.length
+            ? `<div class="section-label">Aktive Leihsiebe <span class="count-badge">${active.length}</span></div>` + active.map(d => renderLeihCard(d,false)).join('')
+            : '<div class="empty-state"><div class="empty-icon">📭</div><p>Keine aktiven Leihsiebe</p></div>';
+        document.getElementById('archivList').innerHTML = archiv.map(d => renderLeihCard(d,true)).join('');
+        document.getElementById('archivCount').textContent = archiv.length;
+    }
+    if (currentMode === 'admin') {
+        const el = document.getElementById('adminList');
+        if (!el) return;
+        el.innerHTML = active.length
+            ? `<div class="section-label">Aktive Leihsiebe <span class="count-badge">${active.length}</span></div>` + active.map(d => renderLeihCard(d,false)).join('')
+            : '<div class="empty-state"><div class="empty-icon">📭</div><p>Keine aktiven Leihsiebe</p></div>';
+        document.getElementById('adminArchivList').innerHTML = archiv.map(d => renderLeihCard(d,true)).join('');
+        document.getElementById('adminArchivCount').textContent = archiv.length;
+    }
+}
+
+// ================================================================
+// RENDER: BLIH
+// ================================================================
+function renderBLIH() {
+    const el = document.getElementById('blihList');
+    if (!el) return;
+    const blihFormEl = document.getElementById('blihForm');
+    if (blihFormEl) blihFormEl.style.display = isSchichtleiter ? 'block' : 'none';
+
+    if (!dataBLIH.length) {
+        el.innerHTML = '<div class="empty-state"><div class="empty-icon">📋</div><p>Keine BLIH-Einträge</p></div>';
+        return;
+    }
+
+    el.innerHTML = `<div class="section-label">BLIH Einträge <span class="count-badge">${dataBLIH.length}</span></div>` + dataBLIH.map(d => {
+        const cardId = `blih_${d.fbKey}`;
+        let adminHtml = '';
+        if (isSchichtleiter) {
+            adminHtml = `<div class="admin-fields">
+                <div class="admin-fields-title">⚙️ ZSVA Felder</div>
+                <div class="admin-field-row"><label>STE</label><input class="card-edit-field" value="${esc(d.ste)}" onblur="saveBLIHField('${d.fbKey}','ste',this.value)"></div>
+                <div class="admin-field-row"><label>Abgemeldet am</label><input class="card-edit-field" type="date" value="${d.abgemeldetAm||''}" onblur="saveBLIHField('${d.fbKey}','abgemeldetAm',this.value)"></div>
+                <div class="admin-field-row"><label>Abgemeldet von</label><input class="card-edit-field" value="${esc(d.abgemeldetVon)}" onblur="saveBLIHField('${d.fbKey}','abgemeldetVon',this.value)"></div>
+                <div class="admin-field-row"><label>ZSVA Ausgang</label><input class="card-edit-field" value="${esc(d.zsvaAusgang)}" onblur="saveBLIHField('${d.fbKey}','zsvaAusgang',this.value)"></div>
+                <div class="admin-field-row"><label>Kritisch</label>
+                    <select class="card-edit-field" onchange="saveBLIHField('${d.fbKey}','kritisch',this.value);renderBLIH()">
+                        <option value="nein" ${d.kritisch==='nein'?'selected':''}>Nein</option>
+                        <option value="ja" ${d.kritisch==='ja'?'selected':''}>JA ⚠️</option>
+                    </select>
+                </div>
+                <div class="admin-field-row"><label>Bemerkung</label><input class="card-edit-field" value="${esc(d.bemerkung)}" onblur="saveBLIHField('${d.fbKey}','bemerkung',this.value)"></div>
+            </div>
+            <div class="card-actions">
+                <button class="card-btn danger" onclick="delBLIH('${d.fbKey}')">🗑️ Löschen</button>
+            </div>`;
+        }
+        return `<div class="blih-card ${d.kritisch==='ja'?'kritisch-ja':''}" id="${cardId}">
+            <div class="card-header" onclick="toggleCard('${cardId}')">
+                <div class="card-main">
+                    <div class="card-sieb">${esc(d.sieb)}</div>
+                    <div class="card-meta">
+                        <span class="meta-pill spital">${esc(d.spital)}</span>
+                        ${d.kritisch==='ja'?'<span class="meta-pill kritisch">⚠️ Kritisch</span>':''}
+                        <span class="meta-pill">📅 ${fmtD(d.aufgenommen)}</span>
+                        ${d.abgemeldetAm?'<span class="meta-pill status-done">✓ Abgemeldet</span>':''}
+                    </div>
+                </div>
+                <span class="card-chevron">›</span>
+            </div>
+            <div class="card-body">
+                <div class="detail-grid">
+                    <div class="detail-item"><label>Lieferant</label><div class="val">${esc(d.lieferant)}</div></div>
+                    <div class="detail-item"><label>STE</label><div class="val ${d.ste?'':'empty'}">${esc(d.ste)||'—'}</div></div>
+                    <div class="detail-item"><label>Abgemeldet am</label><div class="val ${d.abgemeldetAm?'':'empty'}">${fmtD(d.abgemeldetAm)}</div></div>
+                    <div class="detail-item"><label>Abgemeldet von</label><div class="val ${d.abgemeldetVon?'':'empty'}">${esc(d.abgemeldetVon)||'—'}</div></div>
+                    ${d.zsvaAusgang?`<div class="detail-item"><label>ZSVA Ausgang</label><div class="val">${esc(d.zsvaAusgang)}</div></div>`:''}
+                    ${d.bemerkung?`<div class="detail-item" style="grid-column:1/-1"><label>Bemerkung</label><div class="val">${esc(d.bemerkung)}</div></div>`:''}
+                </div>
+                ${adminHtml}
+            </div>
+        </div>`;
+    }).join('');
+}
+
+// ================================================================
+// FILTER
+// ================================================================
+function openFilterPopup()  { document.getElementById('filterPopup').classList.add('open'); }
+function closeFilterPopup() { document.getElementById('filterPopup').classList.remove('open'); }
+function setFilter(v, btn) {
+    currentFilter = v;
+    document.querySelectorAll('.fgrid-btn:not(.archive-btn)').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const label = document.getElementById('filterActiveLabel');
+    if (label) label.textContent = v==='Alle' ? '🏥 Alle Spitäler' : '🏥 ' + v;
+    render();
+}
+function toggleArchiv() {
+    showArchiv = !showArchiv;
+    document.getElementById('archivPopupBtn').classList.toggle('active', showArchiv);
+    document.getElementById('archivSection').style.display = showArchiv ? 'block' : 'none';
+    document.getElementById('adminArchivSection').style.display = showArchiv ? 'block' : 'none';
+}
+
+// ================================================================
+// EMAIL
+// ================================================================
+function sendMail() {
+    if (!isSchichtleiter) { showToast('❌ Nur Schichtleiter!', 'error'); return; }
+    const missing = data.filter(d => !d.eingang || !d.eingang.trim());
+    if (!missing.length) { showToast('✅ Keine fehlenden Leihsiebe.', 'success'); return; }
+    const list = missing.map(d => `• ${d.sb} (${d.sp}, OPS: ${fmtD(d.od)})`).join('\n');
+    const subject = encodeURIComponent('Fehlende Leihsiebe');
+    const body = encodeURIComponent(`Folgende Leihsiebe fehlen noch:\n\n${list}\n\nFreundliche Grüsse\nZSVA St. Gallen`);
+    window.location.href = `mailto:?subject=${subject}&body=${body}`;
+}
+
+// ================================================================
+// FILTER POPUP CLOSE ON BACKDROP
+// ================================================================
+document.getElementById('filterPopup').addEventListener('click', function(e) {
+    if (e.target === this) closeFilterPopup();
+});
+
+// ================================================================
+// SERVICE WORKER
+// ================================================================
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+            .then(reg => console.log('SW registered:', reg.scope))
+            .catch(err => console.warn('SW error:', err));
+    });
+}
+</script>
 </body>
 </html>
