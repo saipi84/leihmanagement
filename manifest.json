@@ -1,7 +1,7 @@
 {
   "name": "ZSVA Leihmanagement",
   "short_name": "ZSVA Leih",
-  "description": "Leihmanagement für St. Gallen",
+  "description": "Leihmanagement fuer St. Gallen",
   "start_url": "https://www.pulsnet.ch/sites/ARG-DIBSCM-scmleihsiebe/zsvapwa/leihmanagement_mobile_v5_PWA.aspx",
   "scope": "https://www.pulsnet.ch/sites/ARG-DIBSCM-scmleihsiebe/zsvapwa/",
   "display": "standalone",
